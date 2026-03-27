@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
+from config import API_KEY_FILE, load_api_key
 from model import DEFAULT_MODEL_NAME, grade_homework
 from utils import load_homework_documents
 
 
-API_KEY = os.getenv("DASHSCOPE_API_KEY", "")
 MODEL_NAME = DEFAULT_MODEL_NAME
 HOMEWORK_DIR = Path("file")
 RESULT_FILE = Path("result.txt")
@@ -18,8 +17,7 @@ def write_results(result_lines: list[str], result_file: Path = RESULT_FILE) -> N
 
 
 def main() -> None:
-    if not API_KEY.strip():
-        raise ValueError("请先设置环境变量 DASHSCOPE_API_KEY。")
+    api_key = load_api_key()
 
     homeworks, ignored_files, failed_files = load_homework_documents(HOMEWORK_DIR)
     result_lines: list[str] = []
@@ -36,7 +34,7 @@ def main() -> None:
     for homework in homeworks:
         try:
             score = grade_homework(
-                api_key=API_KEY,
+                api_key=api_key,
                 homework_text=homework.text,
                 homework_name=homework.name,
                 model_name=MODEL_NAME,
@@ -59,6 +57,7 @@ def main() -> None:
             print(f"- {failed_file.path}：{failed_file.reason}")
 
     print(f"批改结果已写入：{RESULT_FILE}")
+    print(f"API Key 来源：{API_KEY_FILE.name}")
 
 
 if __name__ == "__main__":

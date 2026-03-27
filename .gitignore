@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 result.txt
 prompts/
+api_key.local.txt

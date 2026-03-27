@@ -40,7 +40,7 @@ Homework/
 ## 功能说明
 
 - `main.py`
-  - 从环境变量读取 `API_KEY`。
+  - 从本地文件 `api_key.local.txt` 读取 `API_KEY`。
   - 递归读取 `file` 文件夹中的作业。
   - 对每份作业单独调用一次大模型批改。
   - 将结果按 `作业文件名 分数` 的格式写入 `result.txt`。
@@ -60,31 +60,21 @@ Homework/
 
 ### 1. 配置 API Key
 
-为了避免把密钥直接写进代码，项目默认从环境变量 `DASHSCOPE_API_KEY` 中读取 API Key。
+为了避免把密钥直接写进代码，同时也不依赖环境变量，项目现在默认从根目录的 `api_key.local.txt` 读取 API Key。
 
-Windows PowerShell 可临时执行：
-
-```powershell
-$env:DASHSCOPE_API_KEY="你的真实 DashScope API Key"
-```
-
-如果你希望长期生效，可执行：
+你可以先复制示例文件：
 
 ```powershell
-[System.Environment]::SetEnvironmentVariable("DASHSCOPE_API_KEY", "你的真实 DashScope API Key", "User")
+Copy-Item api_key.local.example.txt api_key.local.txt
 ```
 
-macOS / Linux 终端可执行：
+然后打开 `api_key.local.txt`，把里面的占位内容替换成你自己的 DashScope API Key。
 
-```bash
-export DASHSCOPE_API_KEY="你的真实 DashScope API Key"
-```
+说明：
 
-你也可以先检查环境变量是否配置成功：
-
-```bash
-python -c "import os; print(bool(os.getenv('DASHSCOPE_API_KEY')))"
-```
+- `api_key.local.txt` 已加入 `.gitignore`，不会被提交到 Git 仓库。
+- `api_key.local.example.txt` 是示例文件，可以保留在项目里。
+- `main.py` 和 `test.py` 都会读取这个本地文件。
 
 ### 2. 准备作业文件
 
