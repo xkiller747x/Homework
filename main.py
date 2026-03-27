@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 from model import DEFAULT_MODEL_NAME, grade_homework
 from utils import load_homework_documents
 
 
-API_KEY = "请在这里填写你的 DashScope API Key"
+API_KEY = os.getenv("DASHSCOPE_API_KEY", "")
 MODEL_NAME = DEFAULT_MODEL_NAME
 HOMEWORK_DIR = Path("file")
 RESULT_FILE = Path("result.txt")
@@ -17,8 +18,8 @@ def write_results(result_lines: list[str], result_file: Path = RESULT_FILE) -> N
 
 
 def main() -> None:
-    if "请在这里填写" in API_KEY:
-        raise ValueError("请先在 main.py 中填写有效的 API_KEY。")
+    if not API_KEY.strip():
+        raise ValueError("请先设置环境变量 DASHSCOPE_API_KEY。")
 
     homeworks, ignored_files, failed_files = load_homework_documents(HOMEWORK_DIR)
     result_lines: list[str] = []

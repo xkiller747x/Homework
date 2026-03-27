@@ -1,0 +1,5 @@
+file/
+test.py
+__pycache__/
+*.pyc
+result.txt

@@ -40,7 +40,7 @@ Homework/
 ## 功能说明
 
 - `main.py`
-  - 保存 `API_KEY` 变量。
+  - 从环境变量读取 `API_KEY`。
   - 递归读取 `file` 文件夹中的作业。
   - 对每份作业单独调用一次大模型批改。
   - 将结果按 `作业文件名 分数` 的格式写入 `result.txt`。
@@ -58,12 +58,32 @@ Homework/
 
 ## 使用方法
 
-### 1. 填写 API Key
+### 1. 配置 API Key
 
-打开 `main.py`，把下面的内容替换成你的真实密钥：
+为了避免把密钥直接写进代码，项目默认从环境变量 `DASHSCOPE_API_KEY` 中读取 API Key。
 
-```python
-API_KEY = "请在这里填写你的 DashScope API Key"
+Windows PowerShell 可临时执行：
+
+```powershell
+$env:DASHSCOPE_API_KEY="你的真实 DashScope API Key"
+```
+
+如果你希望长期生效，可执行：
+
+```powershell
+[System.Environment]::SetEnvironmentVariable("DASHSCOPE_API_KEY", "你的真实 DashScope API Key", "User")
+```
+
+macOS / Linux 终端可执行：
+
+```bash
+export DASHSCOPE_API_KEY="你的真实 DashScope API Key"
+```
+
+你也可以先检查环境变量是否配置成功：
+
+```bash
+python -c "import os; print(bool(os.getenv('DASHSCOPE_API_KEY')))"
 ```
 
 ### 2. 准备作业文件
@@ -86,6 +106,12 @@ file/
 
 ```bash
 python main.py
+```
+
+如果你要测试模型连通性，也可以执行：
+
+```bash
+python test.py
 ```
 
 ### 4. 查看结果
@@ -115,3 +141,4 @@ python main.py
 - 如果存在 `.doc` 文件但本机未安装 Microsoft Word，这些文件会读取失败并在终端中提示。
 - 如果模型接口调用失败，程序会在终端打印失败原因，已成功的作业结果仍会写入 `result.txt`。
 - 为了保证每份作业都独立评分，程序会在循环中逐份调用一次大模型接口。
+- 建议不要把真实 API Key 直接写进代码或提交到 Git 仓库。
