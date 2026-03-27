@@ -20,12 +20,16 @@ def main() -> None:
     if "请在这里填写" in API_KEY:
         raise ValueError("请先在 main.py 中填写有效的 API_KEY。")
 
-    homeworks, ignored_files = load_homework_documents(HOMEWORK_DIR)
+    homeworks, ignored_files, failed_files = load_homework_documents(HOMEWORK_DIR)
     result_lines: list[str] = []
 
     if not homeworks:
         write_results(result_lines)
-        print("未找到可批改的 .docx 作业文件，请检查 file 文件夹。")
+        print("未找到可批改的 .doc 或 .docx 作业文件，请检查 file 文件夹。")
+        if failed_files:
+            print("以下 Word 文件读取失败：")
+            for failed_file in failed_files:
+                print(f"- {failed_file.path}：{failed_file.reason}")
         return
 
     for homework in homeworks:
@@ -44,9 +48,14 @@ def main() -> None:
     write_results(result_lines)
 
     if ignored_files:
-        print("以下文件未参与批改（当前仅支持 .docx）：")
+        print("以下文件未参与批改（当前仅支持 .doc 和 .docx）：")
         for file_path in ignored_files:
             print(f"- {file_path}")
+
+    if failed_files:
+        print("以下 Word 文件读取失败：")
+        for failed_file in failed_files:
+            print(f"- {failed_file.path}：{failed_file.reason}")
 
     print(f"批改结果已写入：{RESULT_FILE}")
 
