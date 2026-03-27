@@ -75,39 +75,50 @@ def read_doc(file_path: str | Path) -> str:
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as temp_file:
         temp_txt_path = Path(temp_file.name)
+    with tempfile.NamedTemporaryFile(
+        delete=False, suffix=".ps1", mode="w", encoding="utf-8"
+    ) as script_file:
+        script_path = Path(script_file.name)
+        script_path.write_text(
+            """
+param([string]$source, [string]$target)
 
-    script = """
-& {
-    param([string]$source, [string]$target)
+$ErrorActionPreference = "Stop"
+$word = $null
+$document = $null
 
-    $word = $null
-    $document = $null
-    $wdFormatUnicodeText = 7
-
-    try {
-        $word = New-Object -ComObject Word.Application
-        $word.Visible = $false
-        $document = $word.Documents.Open($source)
-        $document.SaveAs([ref]$target, [ref]$wdFormatUnicodeText)
+try {
+    $word = New-Object -ComObject Word.Application
+    $word.Visible = $false
+    $word.DisplayAlerts = 0
+    $document = $word.Documents.Open($source, [ref]$false, [ref]$true)
+    [System.IO.File]::WriteAllText(
+        $target,
+        $document.Content.Text,
+        [System.Text.UTF8Encoding]::new($false)
+    )
+}
+finally {
+    if ($document -ne $null) {
+        $document.Close([ref]$false)
     }
-    finally {
-        if ($document -ne $null) {
-            $document.Close()
-        }
-        if ($word -ne $null) {
-            $word.Quit()
-        }
+    if ($word -ne $null) {
+        $word.Quit()
     }
 }
-""".strip()
+""".strip(),
+            encoding="utf-8",
+        )
 
     try:
-        completed = subprocess.run(
+        subprocess.run(
             [
                 "powershell",
                 "-NoProfile",
-                "-Command",
-                script,
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                str(script_path),
                 str(doc_path),
                 str(temp_txt_path),
             ],
@@ -115,7 +126,13 @@ def read_doc(file_path: str | Path) -> str:
             text=True,
             check=True,
         )
-        return temp_txt_path.read_text(encoding="utf-16").strip()
+        text = temp_txt_path.read_text(encoding="utf-8").strip()
+        if not text:
+            raise RuntimeError(
+                "读取 .doc 文件失败：Word 未提取到正文内容，请检查文档是否损坏，"
+                "或确认当前环境可正常调用 Microsoft Word。"
+            )
+        return text
     except FileNotFoundError as exc:
         raise RuntimeError("未找到 PowerShell，无法读取 .doc 文件。") from exc
     except subprocess.CalledProcessError as exc:
@@ -127,6 +144,8 @@ def read_doc(file_path: str | Path) -> str:
     finally:
         if temp_txt_path.exists():
             temp_txt_path.unlink()
+        if script_path.exists():
+            script_path.unlink()
 
 
 def read_word_document(file_path: str | Path) -> str:
